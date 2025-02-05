@@ -3,15 +3,18 @@ import { useQuery } from "@tanstack/react-query";
 import SearchBar from "@/components/SearchBar";
 import PokemonGrid from "@/components/PokemonGrid";
 import PokemonDetail from "@/components/PokemonDetail";
+import AdvancedFilters from "@/components/AdvancedFilters";
 import { Pokemon } from "@/types/pokemon";
 import { useToast } from "@/components/ui/use-toast";
 import { motion } from "framer-motion";
 
 const POKEMON_API_BASE = "https://pokeapi.co/api/v2";
-const POKEMON_LIMIT = 151; // First generation
+const POKEMON_LIMIT = 151;
 
 const Index = () => {
   const [search, setSearch] = useState("");
+  const [selectedType, setSelectedType] = useState("all");
+  const [selectedSort, setSelectedSort] = useState("id");
   const [selectedPokemon, setSelectedPokemon] = useState<Pokemon | null>(null);
   const [favorites, setFavorites] = useState<number[]>(() => {
     const saved = localStorage.getItem("favorites");
@@ -36,9 +39,38 @@ const Index = () => {
     },
   });
 
-  const filteredPokemons = pokemons?.filter((pokemon: Pokemon) =>
-    pokemon.name.toLowerCase().includes(search.toLowerCase())
-  );
+  const filterAndSortPokemons = (pokemons: Pokemon[] | undefined) => {
+    if (!pokemons) return [];
+    
+    let filtered = pokemons.filter((pokemon) =>
+      pokemon.name.toLowerCase().includes(search.toLowerCase())
+    );
+
+    if (selectedType !== "all") {
+      filtered = filtered.filter((pokemon) =>
+        pokemon.types.some((type) => type.type.name === selectedType)
+      );
+    }
+
+    return filtered.sort((a, b) => {
+      switch (selectedSort) {
+        case "id":
+          return a.id - b.id;
+        case "id-desc":
+          return b.id - a.id;
+        case "name":
+          return a.name.localeCompare(b.name);
+        case "name-desc":
+          return b.name.localeCompare(a.name);
+        case "weight":
+          return a.weight - b.weight;
+        case "weight-desc":
+          return b.weight - a.weight;
+        default:
+          return 0;
+      }
+    });
+  };
 
   const toggleFavorite = (id: number) => {
     setFavorites((prev) => {
@@ -83,10 +115,16 @@ const Index = () => {
             Explore the world of Pokémon
           </p>
           <SearchBar value={search} onChange={setSearch} />
+          <AdvancedFilters
+            selectedType={selectedType}
+            selectedSort={selectedSort}
+            onTypeChange={setSelectedType}
+            onSortChange={setSelectedSort}
+          />
         </motion.div>
 
         <PokemonGrid
-          pokemons={filteredPokemons || []}
+          pokemons={filterAndSortPokemons(pokemons)}
           favorites={favorites}
           onToggleFavorite={toggleFavorite}
           onPokemonClick={setSelectedPokemon}
