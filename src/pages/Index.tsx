@@ -48,18 +48,18 @@ const Index = () => {
     },
   });
 
-  const { data: trainers, isLoading: isTrainersLoading } = useQuery({
-    queryKey: ["trainers"],
+  const { data: types, isLoading: isTypesLoading } = useQuery({
+    queryKey: ["types"],
     queryFn: async () => {
-      const response = await fetch(`${POKEMON_API_BASE}/trainer-class`);
+      const response = await fetch(`${POKEMON_API_BASE}/type`);
       return response.json();
     },
   });
 
-  const { data: badges, isLoading: isBadgesLoading } = useQuery({
-    queryKey: ["badges"],
+  const { data: regions, isLoading: isRegionsLoading } = useQuery({
+    queryKey: ["regions"],
     queryFn: async () => {
-      const response = await fetch(`${POKEMON_API_BASE}/version-group/1`);
+      const response = await fetch(`${POKEMON_API_BASE}/region`);
       return response.json();
     },
   });
@@ -115,7 +115,7 @@ const Index = () => {
     });
   };
 
-  if (isPokemonsLoading || isTrainersLoading || isBadgesLoading) {
+  if (isPokemonsLoading || isTypesLoading || isRegionsLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center pokedex-bg">
         <div className="animate-pulse text-2xl text-white">Loading Pokédex...</div>
@@ -156,11 +156,11 @@ const Index = () => {
               <div className="mt-6 space-y-4">
                 <button className="flex items-center gap-2 w-full p-4 rounded-lg hover:bg-gray-100 transition-colors">
                   <Award className="h-5 w-5 text-primary" />
-                  <span>Badges</span>
+                  <span>Regions</span>
                 </button>
                 <button className="flex items-center gap-2 w-full p-4 rounded-lg hover:bg-gray-100 transition-colors">
                   <Users className="h-5 w-5 text-primary" />
-                  <span>Trainers</span>
+                  <span>Types</span>
                 </button>
               </div>
             </SheetContent>
