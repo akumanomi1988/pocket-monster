@@ -7,6 +7,15 @@ import AdvancedFilters from "@/components/AdvancedFilters";
 import { Pokemon } from "@/types/pokemon";
 import { useToast } from "@/components/ui/use-toast";
 import { motion } from "framer-motion";
+import { Book, Award, Users, Menu } from "lucide-react";
+import {
+  Sheet,
+  SheetContent,
+  SheetDescription,
+  SheetHeader,
+  SheetTitle,
+  SheetTrigger,
+} from "@/components/ui/sheet";
 
 const POKEMON_API_BASE = "https://pokeapi.co/api/v2";
 const POKEMON_LIMIT = 151;
@@ -22,7 +31,7 @@ const Index = () => {
   });
   const { toast } = useToast();
 
-  const { data: pokemons, isLoading } = useQuery({
+  const { data: pokemons, isLoading: isPokemonsLoading } = useQuery({
     queryKey: ["pokemons"],
     queryFn: async () => {
       const response = await fetch(
@@ -36,6 +45,22 @@ const Index = () => {
         })
       );
       return results;
+    },
+  });
+
+  const { data: trainers, isLoading: isTrainersLoading } = useQuery({
+    queryKey: ["trainers"],
+    queryFn: async () => {
+      const response = await fetch(`${POKEMON_API_BASE}/trainer-class`);
+      return response.json();
+    },
+  });
+
+  const { data: badges, isLoading: isBadgesLoading } = useQuery({
+    queryKey: ["badges"],
+    queryFn: async () => {
+      const response = await fetch(`${POKEMON_API_BASE}/version-group/1`);
+      return response.json();
     },
   });
 
@@ -90,10 +115,10 @@ const Index = () => {
     });
   };
 
-  if (isLoading) {
+  if (isPokemonsLoading || isTrainersLoading || isBadgesLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-pulse text-2xl text-gray-400">Loading...</div>
+      <div className="min-h-screen flex items-center justify-center pokedex-bg">
+        <div className="animate-pulse text-2xl text-white">Loading Pokédex...</div>
       </div>
     );
   }
@@ -102,18 +127,47 @@ const Index = () => {
     <motion.div
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
-      className="min-h-screen bg-gray-50"
+      className="min-h-screen pokedex-bg"
     >
       <div className="max-w-7xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
-        <motion.div
-          initial={{ y: -20 }}
-          animate={{ y: 0 }}
-          className="text-center mb-12"
-        >
-          <h1 className="text-4xl font-bold mb-4">Pokédex</h1>
-          <p className="text-gray-600 mb-8">
-            Explore the world of Pokémon
-          </p>
+        <header className="flex items-center justify-between mb-8">
+          <motion.div
+            initial={{ y: -20 }}
+            animate={{ y: 0 }}
+            className="flex items-center gap-4"
+          >
+            <Book className="h-8 w-8 text-white" />
+            <h1 className="text-4xl font-bold text-white">Pokédex</h1>
+          </motion.div>
+
+          <Sheet>
+            <SheetTrigger asChild>
+              <button className="p-2 rounded-full glass-effect text-white hover:bg-white/20 transition-colors">
+                <Menu className="h-6 w-6" />
+              </button>
+            </SheetTrigger>
+            <SheetContent>
+              <SheetHeader>
+                <SheetTitle>Pokédex Menu</SheetTitle>
+                <SheetDescription>
+                  Explore additional Pokémon information
+                </SheetDescription>
+              </SheetHeader>
+              <div className="mt-6 space-y-4">
+                <button className="flex items-center gap-2 w-full p-4 rounded-lg hover:bg-gray-100 transition-colors">
+                  <Award className="h-5 w-5 text-primary" />
+                  <span>Badges</span>
+                </button>
+                <button className="flex items-center gap-2 w-full p-4 rounded-lg hover:bg-gray-100 transition-colors">
+                  <Users className="h-5 w-5 text-primary" />
+                  <span>Trainers</span>
+                </button>
+              </div>
+            </SheetContent>
+          </Sheet>
+        </header>
+
+        <div className="glass-effect rounded-2xl p-6 mb-8">
           <SearchBar value={search} onChange={setSearch} />
           <AdvancedFilters
             selectedType={selectedType}
@@ -121,7 +175,7 @@ const Index = () => {
             onTypeChange={setSelectedType}
             onSortChange={setSelectedSort}
           />
-        </motion.div>
+        </div>
 
         <PokemonGrid
           pokemons={filterAndSortPokemons(pokemons)}

@@ -1,12 +1,10 @@
-import { Button } from "@/components/ui/button";
 import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { SlidersHorizontal } from "lucide-react";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 interface AdvancedFiltersProps {
   onTypeChange: (type: string) => void;
@@ -37,11 +35,11 @@ const AdvancedFilters = ({
   selectedSort,
 }: AdvancedFiltersProps) => {
   return (
-    <div className="flex flex-wrap gap-4 items-center justify-center mb-6">
+    <div className="flex flex-wrap gap-4 items-center justify-center mt-6">
       <div className="flex items-center gap-2">
-        <span className="text-sm font-medium">Type:</span>
+        <span className="text-sm font-medium text-white">Type:</span>
         <Select value={selectedType} onValueChange={onTypeChange}>
-          <SelectTrigger className="w-[180px]">
+          <SelectTrigger className="w-[180px] bg-white/10 border-white/20 text-white">
             <SelectValue placeholder="Select type" />
           </SelectTrigger>
           <SelectContent>
@@ -55,9 +53,9 @@ const AdvancedFilters = ({
       </div>
 
       <div className="flex items-center gap-2">
-        <span className="text-sm font-medium">Sort by:</span>
+        <span className="text-sm font-medium text-white">Sort by:</span>
         <Select value={selectedSort} onValueChange={onSortChange}>
-          <SelectTrigger className="w-[180px]">
+          <SelectTrigger className="w-[180px] bg-white/10 border-white/20 text-white">
             <SelectValue placeholder="Sort by" />
           </SelectTrigger>
           <SelectContent>
