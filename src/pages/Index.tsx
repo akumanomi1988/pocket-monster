@@ -1,5 +1,4 @@
-import { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useState, useEffect } from "react";
 import SearchBar from "@/components/SearchBar";
 import PokemonGrid from "@/components/PokemonGrid";
 import PokemonDetail from "@/components/PokemonDetail";
@@ -18,7 +17,7 @@ import {
 } from "@/components/ui/sheet";
 
 const POKEMON_API_BASE = "https://pokeapi.co/api/v2";
-const POKEMON_LIMIT = 151;
+const POKEMON_LIMIT = 300;
 
 const Index = () => {
   const [search, setSearch] = useState("");
@@ -29,44 +28,52 @@ const Index = () => {
     const saved = localStorage.getItem("favorites");
     return saved ? JSON.parse(saved) : [];
   });
+  const [pokemons, setPokemons] = useState<Pokemon[]>([]);
+  const [types, setTypes] = useState<{ name: string; url: string }[]>([]);
+  const [regions, setRegions] = useState<{ name: string; url: string }[]>([]);
+  const [loading, setLoading] = useState(true);
   const { toast } = useToast();
 
-  const { data: pokemons, isLoading: isPokemonsLoading } = useQuery({
-    queryKey: ["pokemons"],
-    queryFn: async () => {
-      const response = await fetch(
-        `${POKEMON_API_BASE}/pokemon?limit=${POKEMON_LIMIT}`
-      );
-      const data = await response.json();
-      const results = await Promise.all(
-        data.results.map(async (pokemon: { url: string }) => {
-          const res = await fetch(pokemon.url);
-          return res.json();
-        })
-      );
-      return results;
-    },
-  });
+  // Fetch Pokémon data on mount
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        // Fetch Pokémon list
+        const pokemonResponse = await fetch(
+          `${POKEMON_API_BASE}/pokemon?limit=${POKEMON_LIMIT}`
+        );
+        const pokemonData = await pokemonResponse.json();
+        const pokemonDetails = await Promise.all(
+          pokemonData.results.map(async (pokemon: { url: string }) => {
+            const res = await fetch(pokemon.url);
+            return res.json();
+          })
+        );
+        setPokemons(pokemonDetails);
 
-  const { data: types, isLoading: isTypesLoading } = useQuery({
-    queryKey: ["types"],
-    queryFn: async () => {
-      const response = await fetch(`${POKEMON_API_BASE}/type`);
-      return response.json();
-    },
-  });
+        // Fetch types
+        const typesResponse = await fetch(`${POKEMON_API_BASE}/type`);
+        const typesData = await typesResponse.json();
+        setTypes(typesData.results);
 
-  const { data: regions, isLoading: isRegionsLoading } = useQuery({
-    queryKey: ["regions"],
-    queryFn: async () => {
-      const response = await fetch(`${POKEMON_API_BASE}/region`);
-      return response.json();
-    },
-  });
+        // Fetch regions
+        const regionsResponse = await fetch(`${POKEMON_API_BASE}/region`);
+        const regionsData = await regionsResponse.json();
+        setRegions(regionsData.results);
+      } catch (error) {
+        console.error("Error fetching data:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
 
-  const filterAndSortPokemons = (pokemons: Pokemon[] | undefined) => {
+    fetchData();
+  }, []);
+
+  // Filter and sort Pokémon
+  const filterAndSortPokemons = (pokemons: Pokemon[]) => {
     if (!pokemons) return [];
-    
+
     let filtered = pokemons.filter((pokemon) =>
       pokemon.name.toLowerCase().includes(search.toLowerCase())
     );
@@ -97,25 +104,26 @@ const Index = () => {
     });
   };
 
+  // Toggle favorite
   const toggleFavorite = (id: number) => {
     setFavorites((prev) => {
       const newFavorites = prev.includes(id)
         ? prev.filter((fav) => fav !== id)
         : [...prev, id];
       localStorage.setItem("favorites", JSON.stringify(newFavorites));
-      
+
       toast({
         title: prev.includes(id) ? "Removed from favorites" : "Added to favorites",
         description: `Pokémon #${id} has been ${
           prev.includes(id) ? "removed from" : "added to"
         } your favorites.`,
       });
-      
+
       return newFavorites;
     });
   };
 
-  if (isPokemonsLoading || isTypesLoading || isRegionsLoading) {
+  if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center pokedex-bg">
         <div className="animate-pulse text-2xl text-white">Loading Pokédex...</div>
